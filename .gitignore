@@ -209,3 +209,5 @@ __marimo__/
 # Addition Ingores
 *.log
 *.env
+*.mp4
+*.mov
