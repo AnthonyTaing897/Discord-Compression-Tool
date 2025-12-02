@@ -34,7 +34,7 @@ def compressVid (video_file:Path,processed_drct:Path,filename:Path, target_file_
 
     video = ffmpeg.input(video_file)
     
-    compressed_video_filepath = f"{processed_drct}/{filename}_compressed.mp4"
+    compressed_video_filepath = f"{processed_drct}/{Path(filename).stem}_compressed.mp4"
     # Output compressed video
 
     if compressAudio:
@@ -57,6 +57,8 @@ def compressVid (video_file:Path,processed_drct:Path,filename:Path, target_file_
     print(f"-----------\nTarget size: {target_size} bytes")
     print(f"Final size: {final_size} bytes\n-----------") 
 
+    return Path(compressed_video_filepath)
+
 
 if __name__ == "__main__":
-    compressVid("Change and Slam.mp4","Discord_Bot\cmds\Library\Processed_Videos","Change and Slam.mp4",9,True)
+    compressVid(Path("Change and Slam.mp4"),"Discord_Bot\cmds\Library\Processed_Videos",Path("Change and Slam.mp4"),9,True)

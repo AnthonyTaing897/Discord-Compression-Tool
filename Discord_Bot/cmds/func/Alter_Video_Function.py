@@ -2,7 +2,7 @@ import ffmpeg
 from pathlib import Path
 
 def alterVideo (video_file:Path,processed_drct:Path,filename:Path) -> Path:
-    process_path = f"{processed_drct}/{filename}_compressed.mp4"
+    process_path = f"{processed_drct}/{filename.stem}_compressed.mp4"
     print(process_path)
 
     video = ffmpeg.input(video_file)

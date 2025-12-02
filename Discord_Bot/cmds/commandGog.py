@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 
 from cmds.func.Alter_Video_Function import alterVideo
+from cmds.func.Compress_Video_Function import compressVid
 
 class commandGog(commands.Cog):
     def __init__(self, bot):
@@ -22,20 +23,34 @@ class commandGog(commands.Cog):
     async def awake(self, ctx):
         await ctx.send("I am awake and ready to compress your videos!")
 
-    # compressVid command to compress video attachments (Not functional yet)
+    # compress command to compress video attachments (Not functional yet)
     @commands.command()
-    async def compressVid(self, ctx):
+    async def compress(self, ctx):
         if ctx.message.attachments:
             attachment = ctx.message.attachments[0]
             if attachment.content_type and attachment.content_type.startswith('video/'):
                 await ctx.send("Compressing video...")
-                await ctx.send(attachment)
+                
+                temp_save_path = self.temp_dir / attachment.filename
+
+                # save attachment into Temp_Videos
+                await attachment.save(fp = temp_save_path, use_cached=False)
+
+                proccess_save_path = compressVid(temp_save_path,self.processed_dir,attachment.filename,3)
+                file = discord.File(proccess_save_path)
+
+                await ctx.send(file=file)
+                await ctx.send("Video compressed successfully!")
+
+                os.remove(temp_save_path)
+                os.remove(proccess_save_path)
+
             else:
                 await ctx.send("The attachment is not a video.")
 
     # Joke command to send back an edited video (Will remove later)
     @commands.command()
-    async def alterVideo(self, ctx):
+    async def alter(self, ctx):
         if ctx.message.attachments:
             attachment = ctx.message.attachments[0]
             if attachment.content_type and attachment.content_type.startswith('video/'):
