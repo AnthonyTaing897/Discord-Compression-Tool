@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from server import webhookReciever
 
 import os
 
@@ -25,7 +26,12 @@ client = commands.Bot(command_prefix = '%', intents = intents)
 @client.event
 async def on_ready():
     await client.add_cog(commandGog(client))
+
+    webhookReciever.init_webhook_reciever(client)
     print(f"The {client.user.name} is ready to compress")
 
-# Run the client (Leave this at the end of the file)
-client.run(token)
+
+if __name__ == "__main__":
+    
+    # Run the client (Leave this at the end of the file)
+    client.run(token)

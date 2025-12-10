@@ -38,11 +38,8 @@ class commandGog(commands.Cog):
     
         # Get Discord ID of mentioned user (Test command)
     @commands.command()
-    async def getId(self, ctx, target: discord.Member = None):
-        if target:
-            await ctx.send(f"{target.name}'s Discord ID is: {target.id}")
-        else:
-            await ctx.send("Please mention a user to get their Discord ID.")
+    async def getId(self, ctx):
+        await ctx.send(f"Your Discord ID is: {ctx.author.id}")
 
     # compress command to compress video attachments
     @commands.command()
