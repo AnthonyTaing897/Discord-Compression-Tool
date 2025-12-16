@@ -13,7 +13,7 @@ table = """CREATE TABLE IF NOT EXISTS sessions (session_id TEXT PRIMARY KEY, ses
 #Fetch all records from the sessions table
 FetchALL = cursor.execute("SELECT * FROM sessions")
 #get first record
-print(FetchALL.fetchone()[1])
+print(FetchALL.fetchone())
 
 connection.commit()
 cursor.close()

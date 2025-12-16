@@ -15,8 +15,11 @@ def webhook():
     if request.method == 'POST':
         data = request.get_json() or {}
         print(data)
-        user_id = data.get('data').get('UserID')
+        user_id = data.get('payload').get('data').get('UserID')
         print(user_id)
+        if int(user_id) == 1:
+            abort(400)
+
         if _bot and user_id:
             
             async def send_message():
@@ -45,3 +48,8 @@ def init_webhook_reciever(bot, host='0.0.0.0', port=8080, url = '/discCompress')
 
     t = threading.Thread(target=_serve,daemon=True)
     t.start()
+
+if __name__ == "__main__":
+    init_webhook_reciever(None)
+    while True:
+        pass

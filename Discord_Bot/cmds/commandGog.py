@@ -1,15 +1,16 @@
-import discord
+from cmds.sessionGenerator import gen_sessCode, gen_sessID
 from discord.ext import commands
 
 from pathlib import Path
-import os
 
 from cmds.func.Alter_Video_Function import alterVideo
 from cmds.func.Compress_Video_Function import compressVid
 
 class commandGog(commands.Cog):
-    def __init__(self, client):
+    def __init__(self, client, connection = None):
+
         self.client = client
+        self.connection = connection
 
         # Clear and create Temp_Videos and Processed_Videos directories
         self.temp_dir = Path(__file__).parent / "Library/Temp_Videos"
@@ -41,54 +42,32 @@ class commandGog(commands.Cog):
     async def getId(self, ctx):
         await ctx.send(f"Your Discord ID is: {ctx.author.id}")
 
-    # compress command to compress video attachments
     @commands.command()
-    async def compress(self, ctx):
-        if ctx.message.attachments:
-            attachment = ctx.message.attachments[0]
-            if attachment.content_type and attachment.content_type.startswith('video/'):
-                await ctx.send("Compressing video...")
-                
-                temp_save_path = self.temp_dir / attachment.filename
+    async def request(self, ctx):
+        userID = ctx.author.id
+        cursor = self.connection.cursor()
+        
+        if self.user_exists(userID,self.connection):
+            await ctx.send("You already have an active session.")
+            cursor.close()
+            return
+        
+        session_ID = gen_sessID(connection=self.connection)
+        session_code = gen_sessCode(connection=self.connection)
 
-                # save attachment into Temp_Videos
-                await attachment.save(fp = temp_save_path, use_cached=False)
+        cursor.execute("INSERT INTO sessions (session_id, session_code, user_id, start_time) VALUES (?, ?, ?, CURRENT_TIMESTAMP)", 
+                       (session_ID, session_code, str(userID)))
+        
+        self.connection.commit()
+        
+        cursor.close()
+        await ctx.send(f"Session created! Your session code is: {session_code}")
 
-                proccess_save_path = compressVid(temp_save_path,self.processed_dir,attachment.filename,3)
-                file = discord.File(proccess_save_path)
+        #Complete this later
 
-                await ctx.send(file=file)
-                await ctx.send("Video compressed successfully!")
-
-                os.remove(temp_save_path)
-                os.remove(proccess_save_path)
-
-            else:
-                await ctx.send("The attachment is not a video.")
-
-    # Joke command to send back an edited video (Will remove later)
-    @commands.command()
-    async def alter(self, ctx):
-        if ctx.message.attachments:
-            attachment = ctx.message.attachments[0]
-            if attachment.content_type and attachment.content_type.startswith('video/'):
-                await ctx.send("Altering video...")
-                
-                temp_save_path = self.temp_dir / attachment.filename
-
-                # save attachment into Temp_Videos
-                await attachment.save(fp = temp_save_path, use_cached=False)
-
-                proccess_save_path = alterVideo(temp_save_path,self.processed_dir,attachment.filename)
-                file = discord.File(proccess_save_path)
-                
-                
-                await ctx.send(file=file)
-                await ctx.send("Video altered successfully!")
-
-                os.remove(temp_save_path)
-                os.remove(proccess_save_path)
-            else:
-                await ctx.send("The attachment is not a video.")
-        else:
-            await ctx.send("No attachment found.")
+    def user_exists(self, userID, connection):
+        cursor = connection.cursor()
+        cursor.execute("SELECT user_id FROM sessions WHERE user_id = ?", (userID,))
+        if(cursor.fetchone()):
+            return True
+        return False
