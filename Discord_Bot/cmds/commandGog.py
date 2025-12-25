@@ -1,16 +1,16 @@
 from cmds.sessionGenerator import gen_sessCode, gen_sessID
 from discord.ext import commands
-
+import gspread
 from pathlib import Path
-
-from cmds.func.Alter_Video_Function import alterVideo
-from cmds.func.Compress_Video_Function import compressVid
+from datetime import datetime
+from server.func.Alter_Video_Function import alterVideo
+from server.func.Compress_Video_Function import compressVid
 
 class commandGog(commands.Cog):
-    def __init__(self, client, connection = None):
+    def __init__(self, client, database : gspread.Worksheet = None):
 
         self.client = client
-        self.connection = connection
+        self.database = database
 
         # Clear and create Temp_Videos and Processed_Videos directories
         self.temp_dir = Path(__file__).parent / "Library/Temp_Videos"
@@ -45,29 +45,23 @@ class commandGog(commands.Cog):
     @commands.command()
     async def request(self, ctx):
         userID = ctx.author.id
-        cursor = self.connection.cursor()
         
-        if self.user_exists(userID,self.connection):
+        if self.user_exists(userID,self.database):
             await ctx.send("You already have an active session.")
-            cursor.close()
             return
         
-        session_ID = gen_sessID(connection=self.connection)
-        session_code = gen_sessCode(connection=self.connection)
+        session_ID = gen_sessID(database=self.database)
+        session_code = gen_sessCode(database=self.database)
 
-        cursor.execute("INSERT INTO sessions (session_id, session_code, user_id, start_time) VALUES (?, ?, ?, CURRENT_TIMESTAMP)", 
-                       (session_ID, session_code, str(userID)))
+        # Store session in the database sets date and time automatically
+        self.database.append_row([session_ID, session_code, str(userID)])
         
-        self.connection.commit()
-        
-        cursor.close()
         await ctx.send(f"Session created! Your session code is: {session_code}")
 
-        #Complete this later
 
-    def user_exists(self, userID, connection):
-        cursor = connection.cursor()
-        cursor.execute("SELECT user_id FROM sessions WHERE user_id = ?", (userID,))
-        if(cursor.fetchone()):
-            return True
+    def user_exists(self, userID:str, database:gspread.Worksheet) -> bool:
+        records = database.get_all_records()
+        for record in records:
+            if str(record['User ID']) == userID:
+                return True
         return False
